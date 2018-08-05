@@ -1,0 +1,35 @@
+import numpy as np
+from bs4 import BeautifulSoup
+import re
+from urllib.request import urlopen
+from collections import Counter
+import urllib
+
+
+base_url = r"http://baike.baidu.com"
+word = ['血小板']
+
+
+def url_find(his):
+	his = [('/item/' + urllib.request.quote(i)) for i in his]
+	words = Counter()
+	urls = Counter()
+	for hisi in his:
+		url = base_url + hisi
+		html = urlopen(url).read().decode('utf-8')
+		soup = BeautifulSoup(html, features='lxml')
+		url = (soup.find_all('a', {'target':'_blank', 'href': re.compile('/item/(%.{2})+$')}))
+		for i in url:
+			words[i.get_text()] += 1
+			urls[i['href']] += 1
+	return urls, words
+
+urls1, words1 = url_find(word)
+result = (np.array(list(words1.most_common(min(20, len(words1))))))
+print(result)
+print(result[:, 0])
+
+urls2, words2 = url_find(result[:, 0])
+result = (np.array(list(words2.most_common(50))))
+print(result)
+print(result[:, 0])
